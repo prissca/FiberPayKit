@@ -22,25 +22,25 @@ export default function InvoicesPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        <span className="label">Filter status:</span>
-        <select
-          className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm"
-          value={status}
-          onChange={(e) => setStatus(e.target.value)}
-        >
-          {STATUSES.map((s) => (
-            <option key={s} value={s}>
-              {s || "all"}
-            </option>
-          ))}
-        </select>
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="label">Filter:</span>
+        {STATUSES.map((s) => (
+          <button
+            key={s}
+            onClick={() => setStatus(s)}
+            className={`rounded-lg px-3 py-1.5 text-sm font-semibold capitalize transition ${
+              status === s ? "btn-primary" : "chip hover:border-cyan/40"
+            }`}
+          >
+            {s || "all"}
+          </button>
+        ))}
       </div>
 
-      <div className="card overflow-x-auto">
+      <div className="panel overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-neutral-200 text-left text-xs uppercase text-neutral-500">
+            <tr className="text-left text-[11px] uppercase tracking-wider text-[#7f8bb0]">
               <th className="px-4 py-3">Invoice</th>
               <th className="px-4 py-3">Order</th>
               <th className="px-4 py-3">Amount</th>
@@ -54,40 +54,46 @@ export default function InvoicesPage() {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={8} className="px-4 py-6 text-neutral-500">
+                <td colSpan={8} className="px-4 py-6 text-[#7f8bb0]">
                   Loading…
                 </td>
               </tr>
             ) : invoices.length === 0 ? (
               <tr>
-                <td colSpan={8} className="px-4 py-6 text-neutral-500">
+                <td colSpan={8} className="px-4 py-6 text-[#7f8bb0]">
                   No invoices.
                 </td>
               </tr>
             ) : (
               invoices.map((inv) => (
-                <tr key={inv.id} className="border-b border-neutral-100">
-                  <td className="px-4 py-3 font-mono text-xs">{inv.id}</td>
+                <tr
+                  key={inv.id}
+                  className="border-t border-edge transition hover:bg-white/[0.03]"
+                >
+                  <td className="px-4 py-3 font-mono text-xs text-cyan-soft">
+                    {inv.id}
+                  </td>
                   <td className="px-4 py-3">{inv.orderId}</td>
-                  <td className="px-4 py-3">
-                    {inv.amount} {inv.currency}
+                  <td className="px-4 py-3 font-semibold">
+                    {inv.amount}{" "}
+                    <span className="text-xs text-[#7f8bb0]">{inv.currency}</span>
                   </td>
                   <td className="px-4 py-3">
                     <InvoiceStatusBadge status={inv.status} />
                   </td>
-                  <td className="px-4 py-3 text-neutral-500">
+                  <td className="px-4 py-3 text-[#7f8bb0]">
                     {new Date(inv.createdAt).toLocaleString()}
                   </td>
-                  <td className="px-4 py-3 text-neutral-500">
+                  <td className="px-4 py-3 text-[#7f8bb0]">
                     {new Date(inv.expiresAt).toLocaleString()}
                   </td>
-                  <td className="px-4 py-3 text-neutral-500">
+                  <td className="px-4 py-3 text-[#7f8bb0]">
                     {inv.paidAt ? new Date(inv.paidAt).toLocaleString() : "—"}
                   </td>
                   <td className="px-4 py-3 text-right">
                     <Link
                       href={`/checkout/${inv.id}`}
-                      className="text-sm text-brand"
+                      className="text-sm text-cyan-soft hover:underline"
                     >
                       Checkout →
                     </Link>

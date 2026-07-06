@@ -19,9 +19,9 @@ export default async function CheckoutPage({
 
   if (error || !invoice) {
     return (
-      <div className="card mx-auto max-w-md p-8 text-center">
-        <h1 className="text-lg font-semibold">Invoice not found</h1>
-        <p className="mt-2 text-sm text-neutral-500">{error}</p>
+      <div className="panel mx-auto max-w-md p-8 text-center">
+        <h1 className="text-lg font-semibold text-white">Invoice not found</h1>
+        <p className="mt-2 text-sm text-[#7f8bb0]">{error}</p>
         <Link href="/store" className="btn-secondary mt-4">
           Back to store
         </Link>

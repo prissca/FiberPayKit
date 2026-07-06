@@ -28,57 +28,56 @@ export default function SettingsPage() {
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
-      <div className="card p-5">
-        <h2 className="mb-4 font-semibold">Merchant</h2>
+      <div className="panel p-5">
+        <h2 className="mb-4 font-semibold text-white">Merchant</h2>
         {me ? (
-          <dl className="space-y-2 text-sm">
+          <dl className="space-y-3 text-sm">
             <Row label="Name">{me.name}</Row>
             <Row label="Email">{me.email}</Row>
             <Row label="Merchant ID">
-              <span className="mono">{me.id}</span>
+              <span className="mono text-cyan-soft">{me.id}</span>
             </Row>
           </dl>
         ) : (
-          <p className="text-sm text-neutral-500">Loading…</p>
+          <p className="text-sm text-[#7f8bb0]">Loading…</p>
         )}
       </div>
 
-      <div className="card p-5">
-        <h2 className="mb-4 font-semibold">API credentials</h2>
+      <div className="panel p-5">
+        <h2 className="mb-4 font-semibold text-white">API credentials</h2>
         <MerchantApiKeyBox
           apiKeyPrefix={me?.apiKeyPrefix ?? "fpk_test_"}
           webhookSecret="whsec_demo_secret_do_not_use_in_prod"
         />
       </div>
 
-      <div className="card p-5 lg:col-span-2">
-        <h2 className="mb-4 font-semibold">Fiber integration</h2>
+      <div className="panel p-5 lg:col-span-2">
+        <h2 className="mb-4 font-semibold text-white">Fiber integration</h2>
         <dl className="grid gap-4 sm:grid-cols-3">
           <Row label="Mode">
-            <span className="rounded bg-neutral-100 px-2 py-0.5 text-xs">
-              {health?.mode ?? "—"}
-            </span>
+            <span className="chip !py-0.5">{health?.mode ?? "—"}</span>
           </Row>
           <Row label="Node status">
             <span className="flex items-center gap-2">
               <span
-                className={`h-2.5 w-2.5 rounded-full ${
-                  health?.fiberNode.reachable ? "bg-green-500" : "bg-red-500"
+                className={`dot ${
+                  health?.fiberNode.reachable
+                    ? "dot-live animate-pulseGlow"
+                    : "dot-off"
                 }`}
               />
               {health?.fiberNode.reachable ? "Reachable" : "Unreachable"}
             </span>
           </Row>
           <Row label="RPC URL">
-            <span className="text-neutral-400">
-              hidden (server-side only) ••••••••
-            </span>
+            <span className="text-[#5f6a8c]">hidden · server-side only ••••</span>
           </Row>
         </dl>
-        <p className="mt-4 text-xs text-neutral-400">
+        <p className="mt-4 text-xs text-[#7f8bb0]">
           The Fiber RPC URL is never exposed to the browser. All Fiber RPC calls
           happen on the API server. Switch modes with the{" "}
-          <code className="mono">FIBER_MODE</code> environment variable.
+          <code className="mono text-cyan-soft">FIBER_MODE</code> environment
+          variable.
         </p>
       </div>
     </div>
@@ -89,7 +88,7 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
   return (
     <div>
       <dt className="label">{label}</dt>
-      <dd className="mt-1 text-sm font-medium text-neutral-800">{children}</dd>
+      <dd className="mt-1 text-sm font-medium text-white">{children}</dd>
     </div>
   );
 }

@@ -3,33 +3,185 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: light;
+  color-scheme: dark;
+  --bg: #04050c;
+  --text: #e7eaf6;
+  --text-dim: #93a0c4;
 }
 
-body {
-  @apply bg-neutral-50 text-neutral-900 antialiased;
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-void text-[#e7eaf6] antialiased;
+    background-image:
+      radial-gradient(1200px 600px at 50% -10%, rgba(124, 92, 255, 0.16), transparent 60%),
+      radial-gradient(900px 500px at 92% 8%, rgba(45, 212, 255, 0.1), transparent 55%),
+      radial-gradient(700px 500px at 8% 30%, rgba(255, 92, 240, 0.07), transparent 55%);
+    background-attachment: fixed;
+    min-height: 100vh;
+  }
+  /* Faint holographic grid behind everything */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(124, 92, 255, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(124, 92, 255, 0.05) 1px, transparent 1px);
+    background-size: 44px 44px;
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black, transparent 75%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  ::selection {
+    background: rgba(124, 92, 255, 0.4);
+  }
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #070a16;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #2a3350, #171d33);
+    border-radius: 8px;
+    border: 2px solid #070a16;
+  }
 }
 
-.card {
-  @apply rounded-xl border border-neutral-200 bg-white shadow-sm;
+@layer components {
+  /* ---- Raised neo-skeuomorphic panel (the workhorse) -------------------- */
+  .panel {
+    @apply relative rounded-2xl border border-edge;
+    background: linear-gradient(150deg, #141a30 0%, #0c1020 55%, #0a0e1c 100%);
+    box-shadow:
+      10px 10px 28px rgba(0, 0, 0, 0.6),
+      -8px -8px 22px rgba(120, 150, 255, 0.04),
+      inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  }
+  /* Backwards-compatible alias used across existing pages */
+  .card {
+    @apply panel;
+  }
+  .panel-inset {
+    @apply rounded-2xl border border-black/40;
+    background: linear-gradient(150deg, #090c18, #0c1122);
+    box-shadow:
+      inset 6px 6px 16px rgba(0, 0, 0, 0.7),
+      inset -4px -4px 12px rgba(120, 150, 255, 0.05);
+  }
+  .glass {
+    @apply rounded-2xl border border-white/10;
+    background: rgba(19, 26, 46, 0.55);
+    backdrop-filter: blur(14px);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  }
+
+  /* ---- Buttons: glossy, tactile, with press physics -------------------- */
+  .btn {
+    @apply inline-flex select-none items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold tracking-tight transition-all duration-150 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply btn text-white;
+    background: linear-gradient(180deg, #8f74ff 0%, #7c5cff 48%, #5b3df6 100%);
+    box-shadow:
+      0 8px 18px rgba(124, 92, 255, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.45),
+      inset 0 -2px 6px rgba(0, 0, 0, 0.35);
+  }
+  .btn-primary:hover {
+    box-shadow:
+      0 10px 26px rgba(124, 92, 255, 0.6),
+      inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  }
+  .btn-primary:active {
+    box-shadow:
+      inset 0 3px 8px rgba(0, 0, 0, 0.5),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+  .btn-secondary {
+    @apply btn text-[#c9d2f0];
+    background: linear-gradient(180deg, #1b2138 0%, #121729 100%);
+    box-shadow:
+      0 6px 14px rgba(0, 0, 0, 0.45),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(140, 170, 255, 0.14);
+  }
+  .btn-secondary:hover {
+    border-color: rgba(45, 212, 255, 0.4);
+    box-shadow: 0 0 18px rgba(45, 212, 255, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+  .btn-danger {
+    @apply btn text-red-100;
+    background: linear-gradient(180deg, #ff6b6b 0%, #e23b3b 55%, #b52424 100%);
+    box-shadow: 0 8px 18px rgba(226, 59, 59, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  }
+  .btn-lime {
+    @apply btn text-[#062018];
+    background: linear-gradient(180deg, #7dffd8 0%, #33e6ab 60%, #17c98f 100%);
+    box-shadow: 0 8px 18px rgba(84, 247, 192, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  }
+
+  /* ---- Text helpers ---------------------------------------------------- */
+  .label {
+    @apply text-[11px] font-semibold uppercase tracking-[0.15em] text-[#7f8bb0];
+  }
+  .mono {
+    @apply break-all font-mono text-sm text-[#c9d2f0];
+  }
+  .holo-text {
+    background: linear-gradient(120deg, #7ee7ff 0%, #a892ff 45%, #ff5cf0 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .neon-cyan {
+    text-shadow: 0 0 14px rgba(45, 212, 255, 0.7);
+  }
+
+  /* ---- Chips / badges -------------------------------------------------- */
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-white/10 px-3 py-1 text-xs font-medium text-[#aab4d8];
+    background: rgba(19, 26, 46, 0.7);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+
+  /* Glowing status dot */
+  .dot {
+    @apply inline-block h-2.5 w-2.5 rounded-full;
+  }
+  .dot-live {
+    background: #54f7c0;
+    box-shadow: 0 0 10px #54f7c0, 0 0 2px #54f7c0;
+  }
+  .dot-off {
+    background: #ff5c6a;
+    box-shadow: 0 0 10px #ff5c6a;
+  }
+
+  /* Scanline accent for cards */
+  .scanline::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 40%;
+    background: linear-gradient(180deg, rgba(45, 212, 255, 0.08), transparent);
+    pointer-events: none;
+    animation: scan 3.5s linear infinite;
+    mix-blend-mode: screen;
+  }
 }
 
-.btn {
-  @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed;
-}
-.btn-primary {
-  @apply btn bg-brand text-white hover:bg-brand-dark;
-}
-.btn-secondary {
-  @apply btn border border-neutral-300 bg-white text-neutral-800 hover:bg-neutral-50;
-}
-.btn-danger {
-  @apply btn border border-red-200 bg-red-50 text-red-700 hover:bg-red-100;
-}
-
-.label {
-  @apply text-xs font-medium uppercase tracking-wide text-neutral-500;
-}
-.mono {
-  @apply font-mono text-sm break-all;
+@layer utilities {
+  .text-dim {
+    color: #93a0c4;
+  }
+  .divide-edge > * + * {
+    border-color: rgba(140, 170, 255, 0.08);
+  }
 }
