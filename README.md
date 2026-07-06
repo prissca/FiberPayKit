@@ -144,7 +144,7 @@ cp .env.example .env
 docker compose up -d postgres redis
 
 # 4. Database
-pnpm db:migrate     # create schema
+pnpm db:push        # apply schema (or `pnpm db:migrate` for migration files)
 pnpm db:seed        # seed the demo merchant (API key: fpk_test_demo)
 
 # 5. Run everything (API on :4000, web on :3000)
@@ -170,6 +170,28 @@ Then open:
 ```bash
 docker compose up --build   # postgres + redis + api + web
 ```
+
+## Live deployment (Vercel + Render)
+
+For a judge-facing demo, deploy the **web app on Vercel** and the **API on
+Render** (or Railway). Vercel is serverless and can't run the long-lived Fastify
+API + background workers, so the API is hosted separately and the Vercel
+frontend points at it. Default demo stays in **mock mode** (no Fiber node, no
+Redis needed).
+
+1. **API → Render:** New → Blueprint → pick this repo. [`render.yaml`](render.yaml)
+   provisions the API + a free Postgres, runs `prisma db push` + seed. Copy the
+   URL (e.g. `https://fiberpaykit-api.onrender.com`).
+2. **Web → Vercel:** Import the repo, **set Root Directory to `apps/web`**, and
+   add env vars `NEXT_PUBLIC_API_URL` (the Render URL),
+   `NEXT_PUBLIC_DEMO_API_KEY=fpk_test_demo`, `NEXT_PUBLIC_WEB_URL` (the Vercel URL).
+3. **Wire them:** on Render set `WEB_URL`, `API_URL`, and `CORS_ORIGINS` to your
+   real URLs, then redeploy.
+
+👉 Full step-by-step (with troubleshooting): **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)**.
+
+> **Setting Root Directory to `apps/web` is what fixes the Vercel build** — it
+> stops Vercel from trying to build the Fastify API (which it can't host).
 
 ## Demo flow
 

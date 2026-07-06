@@ -31,9 +31,9 @@ async function main(): Promise<void> {
   process.on("SIGINT", () => void shutdown("SIGINT"));
   process.on("SIGTERM", () => void shutdown("SIGTERM"));
 
-  await app.listen({ port: config.API_PORT, host: "0.0.0.0" });
+  await app.listen({ port: config.port, host: "0.0.0.0" });
   app.log.info(
-    { mode: config.FIBER_MODE, port: config.API_PORT },
+    { mode: config.FIBER_MODE, port: config.port },
     `FiberPayKit API listening in ${config.FIBER_MODE} mode`
   );
 }

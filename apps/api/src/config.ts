@@ -33,6 +33,8 @@ const envSchema = z.object({
   ),
   REDIS_URL: z.string().default("redis://localhost:6379"),
   API_PORT: z.coerce.number().int().default(4000),
+  // Many hosts (Render, Railway, Heroku, Fly) inject the port via PORT.
+  PORT: z.coerce.number().int().optional(),
   API_URL: z.string().default("http://localhost:4000"),
   WEB_URL: z.string().default("http://localhost:3000"),
 
@@ -62,6 +64,8 @@ if (!process.env.DATABASE_URL) {
 
 export const config = {
   ...parsed,
+  // Prefer the platform-injected PORT (Render/Railway/etc.), else API_PORT.
+  port: parsed.PORT ?? parsed.API_PORT,
   isMock: parsed.FIBER_MODE === "mock",
   corsOrigins: (() => {
     if (parsed.CORS_ORIGINS && parsed.CORS_ORIGINS.trim().length > 0) {

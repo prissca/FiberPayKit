@@ -9,11 +9,12 @@
   },
   "packageManager": "pnpm@10.28.2",
   "scripts": {
-    "build": "pnpm -r build",
+    "build": "pnpm --filter @fiberpaykit/shared build && pnpm --filter @fiberpaykit/sdk build && pnpm --filter @fiberpaykit/api build && pnpm --filter @fiberpaykit/web build",
     "dev": "pnpm -r --parallel dev",
     "lint": "pnpm -r lint",
     "test": "pnpm -r test",
     "db:migrate": "pnpm --filter @fiberpaykit/api db:migrate",
+    "db:push": "pnpm --filter @fiberpaykit/api db:push",
     "db:generate": "pnpm --filter @fiberpaykit/api db:generate",
     "db:seed": "pnpm --filter @fiberpaykit/api db:seed",
     "db:reset": "pnpm --filter @fiberpaykit/api db:reset",

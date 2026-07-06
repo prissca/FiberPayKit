@@ -25,4 +25,4 @@ RUN pnpm --filter @fiberpaykit/shared build \
 FROM build AS runtime
 WORKDIR /app/apps/api
 EXPOSE 4000
-CMD ["sh", "-c", "pnpm prisma migrate deploy && pnpm db:seed || true; node dist/index.js"]
+CMD ["sh", "-c", "pnpm db:push && pnpm db:seed || true; node dist/index.js"]
