@@ -1,0 +1,78 @@
+# FiberPayKit local development stack.
+# Default demo runs in mock Fiber mode — no real Fiber node required.
+#
+#   docker compose up -d postgres redis   # just the infra (recommended for dev)
+#   docker compose up --build             # full stack (api + web + infra)
+#
+# To connect to a real Fiber node, set FIBER_MODE=fiber-rpc and FIBER_RPC_URL
+# in a .env file next to this compose file.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: fiberpaykit
+      POSTGRES_PASSWORD: fiberpaykit
+      POSTGRES_DB: fiberpaykit
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fiberpaykit"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://fiberpaykit:fiberpaykit@postgres:5432/fiberpaykit
+      REDIS_URL: redis://redis:6379
+      API_PORT: "4000"
+      API_URL: http://localhost:4000
+      WEB_URL: http://localhost:3000
+      FIBER_MODE: ${FIBER_MODE:-mock}
+      FIBER_RPC_URL: ${FIBER_RPC_URL:-http://127.0.0.1:8227}
+      JWT_SECRET: ${JWT_SECRET:-dev_only}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-dev_only_32_byte_key_0000000000000}
+      CORS_ORIGINS: http://localhost:3000
+    ports:
+      - "4000:4000"
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - api
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:4000
+      NEXT_PUBLIC_WEB_URL: http://localhost:3000
+      NEXT_PUBLIC_DEMO_API_KEY: fpk_test_demo
+    ports:
+      - "3000:3000"
+
+volumes:
+  pgdata:

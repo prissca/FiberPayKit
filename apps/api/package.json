@@ -1,0 +1,45 @@
+{
+  "name": "@fiberpaykit/api",
+  "version": "0.1.0",
+  "description": "FiberPayKit Fastify API — merchant, invoice, webhook, and reconciliation infrastructure.",
+  "license": "MIT",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "prisma generate && tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "db:push": "prisma db push",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:reset": "prisma migrate reset --force",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
+  "dependencies": {
+    "@fastify/cors": "^10.0.1",
+    "@fastify/rate-limit": "^10.1.1",
+    "@fiberpaykit/sdk": "workspace:*",
+    "@fiberpaykit/shared": "workspace:*",
+    "@prisma/client": "^5.22.0",
+    "bullmq": "^5.34.5",
+    "fastify": "^5.1.0",
+    "ioredis": "^5.4.1",
+    "nanoid": "^5.0.9",
+    "qrcode": "^1.5.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@types/qrcode": "^1.5.5",
+    "prisma": "^5.22.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.8"
+  }
+}

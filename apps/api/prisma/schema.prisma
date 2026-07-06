@@ -1,0 +1,186 @@
+// FiberPayKit Prisma schema.
+// Uses PostgreSQL (docker-compose provides it). Money amounts are stored as
+// strings (base units) — never floats. Raw Fiber responses are kept as JSON
+// for debugging and reconciliation.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum InvoiceStatus {
+  open
+  paid
+  expired
+  canceled
+  failed
+}
+
+enum WebhookEndpointStatus {
+  active
+  disabled
+}
+
+enum WebhookDeliveryStatus {
+  pending
+  succeeded
+  failed
+  abandoned
+}
+
+model Merchant {
+  id                  String   @id
+  name                String
+  email               String   @unique
+  apiKeyHash          String   @unique
+  apiKeyPrefix        String // e.g. "fpk_test_de" for display, non-sensitive
+  webhookSecretHash   String
+  // Encrypted webhook secret so the settings page can reveal it in the demo.
+  webhookSecretCipher String
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  webhookEndpoints WebhookEndpoint[]
+  invoices         Invoice[]
+  webhookEvents    WebhookEvent[]
+
+  @@index([apiKeyHash])
+}
+
+model WebhookEndpoint {
+  id         String                @id
+  merchantId String
+  url        String
+  events     Json
+  status     WebhookEndpointStatus @default(active)
+  createdAt  DateTime              @default(now())
+  updatedAt  DateTime              @updatedAt
+
+  merchant   Merchant          @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  deliveries WebhookDelivery[]
+
+  @@index([merchantId])
+}
+
+model Invoice {
+  id                 String        @id
+  merchantId         String
+  orderId            String
+  amount             String
+  currency           String
+  description        String?
+  status             InvoiceStatus @default(open)
+  fiberInvoiceAddress String?
+  fiberPaymentHash    String?      @unique
+  fiberRawInvoice     Json?
+  // Multi-asset fields (demonstrates Fiber's multi-asset direction).
+  udtTypeScript      Json?
+  displayAmount      String?
+  settlementAsset    String?
+  fee                String?
+  customerEmail      String?
+  customerName       String?
+  metadata           Json?
+  checkoutSuccessUrl String?
+  checkoutCancelUrl  String?
+  createdAt          DateTime      @default(now())
+  expiresAt          DateTime
+  paidAt             DateTime?
+  canceledAt         DateTime?
+  failedAt           DateTime?
+  failedReason       String?
+
+  merchant       Merchant               @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  statusHistory  InvoiceStatusHistory[]
+  webhookEvents  WebhookEvent[]
+  paymentAttempts PaymentAttempt[]
+
+  @@index([merchantId, status])
+  @@index([status, expiresAt])
+  @@index([merchantId, orderId])
+}
+
+model InvoiceStatusHistory {
+  id             String   @id
+  invoiceId      String
+  oldStatus      String?
+  newStatus      String
+  reason         String?
+  rawFiberStatus Json?
+  createdAt      DateTime @default(now())
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
+}
+
+model WebhookEvent {
+  id         String   @id
+  merchantId String
+  invoiceId  String?
+  type       String
+  payload    Json
+  createdAt  DateTime @default(now())
+
+  merchant   Merchant          @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  invoice    Invoice?          @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+  deliveries WebhookDelivery[]
+
+  @@index([merchantId])
+  @@index([invoiceId])
+}
+
+model WebhookDelivery {
+  id             String                @id
+  eventId        String
+  endpointId     String
+  status         WebhookDeliveryStatus @default(pending)
+  attemptCount   Int                   @default(0)
+  nextAttemptAt  DateTime?
+  lastAttemptAt  DateTime?
+  requestUrl     String
+  requestHeaders Json?
+  requestBody    String?
+  responseStatus Int?
+  responseBody   String?
+  errorMessage   String?
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+
+  event    WebhookEvent    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  endpoint WebhookEndpoint @relation(fields: [endpointId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
+  @@index([endpointId])
+  @@index([status])
+}
+
+model PaymentAttempt {
+  id              String   @id
+  invoiceId       String
+  provider        String
+  status          String
+  fiberPaymentHash String?
+  fee             String?
+  raw             Json?
+  createdAt       DateTime @default(now())
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
+}
+
+// Simple in-DB store for the demo webhook receiver (/demo/webhook-receiver).
+model ReceivedWebhook {
+  id            String   @id
+  eventId       String?
+  eventType     String?
+  signatureOk   Boolean
+  headers       Json?
+  body          String
+  receivedAt    DateTime @default(now())
+}
