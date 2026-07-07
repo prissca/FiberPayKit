@@ -1,11 +1,13 @@
-# Render blueprint for the FiberPayKit API (Fastify + Postgres).
+# Render blueprint for the FiberPayKit API (Fastify + Postgres + Redis).
 #
 # Deploy: https://render.com → New → Blueprint → point at this repo.
-# Render will create the web service + a free PostgreSQL database.
+# Render creates the web service + a free PostgreSQL database + a free Redis
+# (Key Value) instance used for response caching and the BullMQ webhook queue.
 #
-# Runs in mock Fiber mode by default (no real Fiber node or Redis required —
-# webhooks deliver inline when Redis is absent). Schema is applied with
-# `prisma db push` and the demo merchant is seeded (API key: fpk_test_demo).
+# Runs in mock Fiber mode by default. Redis is optional — if you remove the
+# `- type: redis` block below, the app degrades gracefully (inline webhook
+# delivery + no cache). Schema is applied with `prisma db push` and the demo
+# merchant is seeded (API key: fpk_test_demo).
 #
 # After the first deploy, set WEB_URL / API_URL / CORS_ORIGINS (see below) to
 # your real URLs and redeploy.
@@ -36,6 +38,12 @@ services:
         fromDatabase:
           name: fiberpaykit-db
           property: connectionString
+      # Redis for caching + BullMQ. Uses Render's internal network URL.
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: fiberpaykit-redis
+          property: connectionString
       # Generated once and kept stable across deploys so the seeded demo API
       # key hash (fpk_test_demo) stays valid.
       - key: JWT_SECRET
@@ -52,6 +60,14 @@ services:
         sync: false
       - key: CORS_ORIGINS
         sync: false
+
+  # Redis (Render "Key Value"). noeviction is required by BullMQ; it also serves
+  # the response cache. Free plan; internal-only (empty ipAllowList).
+  - type: redis
+    name: fiberpaykit-redis
+    plan: free
+    maxmemoryPolicy: noeviction
+    ipAllowList: []
 
 databases:
   - name: fiberpaykit-db

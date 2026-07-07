@@ -1,18 +1,10 @@
 import type { FastifyInstance } from "fastify";
 import { config } from "../config.js";
-import { getFiberClient } from "../fiber/fiberClient.js";
+import { getCachedNodeInfo } from "../services/fiberStatusService.js";
 
 export async function healthRoutes(app: FastifyInstance): Promise<void> {
   app.get("/health", async () => {
-    let reachable = false;
-    let pubkey: string | null = null;
-    try {
-      const info = await getFiberClient().getNodeInfo();
-      reachable = info.reachable;
-      pubkey = info.pubkey;
-    } catch {
-      reachable = false;
-    }
+    const { reachable, pubkey } = await getCachedNodeInfo();
     return {
       ok: true,
       mode: config.FIBER_MODE,

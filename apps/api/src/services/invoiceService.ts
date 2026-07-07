@@ -11,6 +11,7 @@ import { ApiError } from "../utils/errors.js";
 import type { CreateInvoiceInput } from "@fiberpaykit/shared";
 import { emitInvoiceEvent } from "./webhookService.js";
 import type { WebhookEventType } from "@fiberpaykit/shared";
+import { cacheDel, cacheKeys } from "../cache.js";
 
 /** Map an internal status transition to the webhook event type. */
 const STATUS_EVENT: Record<InvoiceStatus, WebhookEventType> = {
@@ -87,6 +88,8 @@ export async function createInvoice(
   // invoice.created is always emitted regardless of endpoint filters logic
   // (endpoint subscription is checked inside emitInvoiceEvent).
   await emitInvoiceEvent(merchant, invoice, "invoice.created");
+  // Bust the merchant's dashboard summary so new invoices show up immediately.
+  await cacheDel(cacheKeys.dashboardSummary(merchant.id));
 
   return invoice;
 }
@@ -156,6 +159,8 @@ export async function transitionInvoice(
   });
 
   await emitInvoiceEvent(invoice.merchant, updated, STATUS_EVENT[newStatus]);
+  // Status changed (e.g. paid) — refresh the dashboard summary right away.
+  await cacheDel(cacheKeys.dashboardSummary(invoice.merchantId));
   return updated;
 }
 

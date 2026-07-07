@@ -96,8 +96,51 @@ Vercel too.
 
 - Set `FIBER_MODE=fiber-rpc` and `FIBER_RPC_URL` (server-side only) to talk to a
   real Fiber Network node.
-- Add a Redis instance and set `REDIS_URL` to use the durable BullMQ webhook
-  queue instead of inline delivery. Everything else is unchanged.
+
+---
+
+## Performance: Redis caching & cold starts
+
+There are **two different kinds of "slow"** — treat them separately:
+
+### 1. Cold start (the big delay on the free tier)
+Render's free web service **sleeps after ~15 min idle** and takes **30–50s to
+wake**. Redis does **not** help this — the Node process still has to boot. Fixes:
+
+- **Keep it warm (free):** ping `https://<api>.onrender.com/health/live` every
+  ~10 minutes with a free uptime monitor —
+  [cron-job.org](https://cron-job.org), [UptimeRobot](https://uptimerobot.com),
+  or a GitHub Action on a schedule. This keeps the instance from sleeping.
+- **Upgrade:** Render Starter ($7/mo) never sleeps. Railway/Fly also don't sleep.
+
+### 2. Warm request latency (what Redis fixes)
+Once awake, the dashboard re-queries Postgres every ~5s. FiberPayKit caches the
+hot read endpoints in Redis so repeated loads are a single in-memory read:
+
+| Endpoint | TTL | Invalidation |
+| --- | --- | --- |
+| `GET /v1/dashboard/summary` | 4s | busted immediately on invoice create / status change |
+| `GET /v1/invoices` | 5s | TTL only |
+| Fiber node status (`/health`, dashboard) | 10s | TTL only |
+
+The cache **degrades gracefully**: if `REDIS_URL` is unset or Redis is down,
+every endpoint falls straight through to Postgres — nothing breaks, it's just
+uncached.
+
+### Hosting Redis
+
+- **Render (recommended here):** the [`render.yaml`](../render.yaml) blueprint
+  already provisions a free **Key Value (Redis)** instance named
+  `fiberpaykit-redis` and injects `REDIS_URL` over Render's private network.
+  Nothing to do — it just works after `Apply`.
+- **Upstash (best if your API is elsewhere / serverless):**
+  [upstash.com](https://upstash.com) → create a Redis database (free tier) →
+  copy the **`rediss://…`** URL into `REDIS_URL`. Works over TLS from anywhere.
+- **Redis Cloud:** [redis.io/cloud](https://redis.io/cloud) has a free 30MB tier;
+  copy its connection URL into `REDIS_URL`.
+
+> Set the memory policy to **`noeviction`** if you also use the BullMQ webhook
+> queue (BullMQ requires it). The blueprint already does this.
 
 ## Troubleshooting
 

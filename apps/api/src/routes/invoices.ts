@@ -14,6 +14,11 @@ import {
   serializeInvoice,
 } from "../services/invoiceService.js";
 import { prisma } from "../db.js";
+import { cacheWrap, cacheKeys } from "../cache.js";
+
+// Short TTL: the list isn't polled, so a few seconds of staleness is fine and
+// it keeps the invoices page snappy under repeated visits.
+const LIST_TTL_SECONDS = 5;
 
 export async function invoiceRoutes(app: FastifyInstance): Promise<void> {
   app.addHook("preHandler", requireMerchant);
@@ -37,12 +42,19 @@ export async function invoiceRoutes(app: FastifyInstance): Promise<void> {
     if (!parsed.success) {
       throw ApiError.badRequest("Invalid query", parsed.error.flatten());
     }
-    const result = await listInvoices(merchant.id, parsed.data);
-    return {
-      data: result.data.map(serializeInvoice),
-      hasMore: result.hasMore,
-      nextCursor: result.nextCursor,
-    };
+    const qs = JSON.stringify(parsed.data);
+    return cacheWrap(
+      cacheKeys.invoiceList(merchant.id, qs),
+      LIST_TTL_SECONDS,
+      async () => {
+        const result = await listInvoices(merchant.id, parsed.data);
+        return {
+          data: result.data.map(serializeInvoice),
+          hasMore: result.hasMore,
+          nextCursor: result.nextCursor,
+        };
+      }
+    );
   });
 
   // GET /v1/invoices/:id — full detail with webhook delivery summary
