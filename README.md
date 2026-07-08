@@ -44,7 +44,7 @@ On a status change, a webhook worker sends **HMAC-SHA256 signed** events to the
 merchant's endpoint with exponential-backoff retries. The dashboard shows
 invoices, webhook attempts, node status, and CSV reconciliation exports.
 
-## Problem statement & the Fiber infrastructure gap
+## Problem statement & the Fiber infrastructure gap 
 
 Fiber Network enables fast, low-cost, multi-asset payments — but there is no
 standard, reusable "merchant acquiring" layer on top of it. Every team that
