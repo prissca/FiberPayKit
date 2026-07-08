@@ -418,17 +418,6 @@ Set with `FIBER_MODE`:
 - Hardened Fiber RPC mappings once the upstream schema stabilizes; channel/LSP
   liquidity views.
 
-## Hackathon submission notes
-
-- **Category:** Merchant, Liquidity, LSP, and Multi-Asset Infrastructure.
-- **Why it fits:** reusable, open-source infrastructure that lets *future* Fiber
-  merchants/wallets/services accept payments — not a single end-user product.
-- **Working demo:** end-to-end invoice → checkout → paid → signed webhook →
-  dashboard → reconciliation, all runnable with `mock` mode and zero external
-  dependencies beyond Postgres + Redis (and even Redis is optional).
-- **Real-node ready:** flip `FIBER_MODE=fiber-rpc` to talk to a live Fiber node.
-- **Tests:** `pnpm test` runs unit tests for webhook signing/verification, the
-  retry backoff schedule, mock Fiber status transitions, and secret hashing.
 
 ## License
 
